@@ -10,8 +10,11 @@ Adam Cate
 
 Queue queue{};
 
-Action _init_actions[5] = {DRIVE(255,255,1000),REVERSE_T(255,255,4000), DRIVE_T(-255,-255,-255,255,4000), 
-DRIVE_T(-255,255,255,255,4000),DRIVE(255,255,1000)};// array of actions used at program startup
+//Action _init_actions[5] = {DRIVE_T(0,0,255,255,5000),REVERSE_T(255,255,5000), DRIVE(-255,-255,5000), 
+//DRIVE_T(-255,-255,255,255,5000),DRIVE_T(255,255,0,0,3000)};// array of actions used at program startup
+
+Action _init_actions[5] = {DRIVE_T(0,255,0,255,12000),DRIVE_T(255,255,255,255,12000), DRIVE_T(255,-255,255,-255,6000), 
+EMPTY(),DRIVE_T(-255,0,-255,0,12000)};// array of actions used at program startup
 
 void setup()
 {

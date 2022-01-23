@@ -67,7 +67,7 @@ void Queue::beginNext(){
 		iter = 0;
 }
 	
-void Queue::startFrame(){
+void Queue::startFrame(){ // TODO change program logic to use micros() instead of millis() for better accuracy
 	startTime = millis();
 }
 

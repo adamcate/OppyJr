@@ -3,6 +3,10 @@
 #include "ActionID.hpp"
 
 
+//#define FRAME_TIME_INITIAL_THRESHOLD 0.2f //the robot's cycle time will often start at a value less than 1 millisecond per frame
+										  //therefore, a minimum frame time threshold must be set as
+										  //calculating deltaT is only accurate for integer values
+
 #define MAX_PARAMS 5
 #define MAX_ACTIONS 5
 
@@ -21,7 +25,7 @@ class Queue{
 private:
 	int iter = 0;
 	
-	long int startTime = 0;
+	unsigned long long int startTime = 0;
 	
 	int deltaT = 1;
 	int timeAccumulator = 0;
