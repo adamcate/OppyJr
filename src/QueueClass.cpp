@@ -68,18 +68,18 @@ void Queue::beginNext(){
 }
 	
 void Queue::startFrame(){ // TODO change program logic to use micros() instead of millis() for better accuracy
-	startTime = millis();
+	startTime = micros();
 }
 
 int Queue::endFrame(){
-	deltaT = millis() - startTime + 1;
+	deltaT = micros() - startTime + 1;
 	return deltaT;
 }	// returns the value of deltaT so the global program can access it
 
 void Queue::executeAction(){	// really gross long switch statement
     float frac = 0.0f;
 
-	timeAccumulator += deltaT;
+	timeAccumulator += ((double)deltaT) / 1000.;
 
 	switch((*curr).ID)
 	{

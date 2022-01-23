@@ -27,8 +27,8 @@ private:
 	
 	unsigned long long int startTime = 0;
 	
-	int deltaT = 1;
-	int timeAccumulator = 0;
+	long deltaT = 1;
+	double timeAccumulator = 0;
 
 	Action actionArr[MAX_ACTIONS]{};
 
