@@ -1,5 +1,6 @@
 // vec.h
-#pragma once
+#ifndef VEC_H
+#define VEC_H
 
 
 struct Vec2
@@ -48,3 +49,4 @@ Vec3 proj(Vec3 u, Vec3 v);
 
 Vec2 normalize(Vec2 vec);
 Vec3 normalize(Vec3 vec);
+#endif

@@ -3,6 +3,7 @@
 #include "Lerp.hpp"
 #include "ActionID.hpp"
 
+
 Action::Action(){
 	
 }
@@ -21,6 +22,9 @@ Action::Action(const Action& arg){
 	this->ID = arg.ID;
 	for(int i = 0; i < MAX_PARAMS; i++)
 		this->params[i] = arg.params[i];
+
+	completionInterrupt = arg.completionInterrupt;	// TODO: interrupts call other functions based on ID after action completion
+	interruptID = arg.interruptID;
 }
 
 Queue::Queue(){
@@ -49,7 +53,10 @@ bool Queue::pushToNextEmpty(Action action){
 	return false;
 }
 
-void Queue::setRelative(Action action, int offset){actionArr[(iter+offset)%MAX_ACTIONS] = action;}
+void Queue::setRelative(Action action, int offset){
+	actionArr[(iter+offset)%MAX_ACTIONS] = action;
+	actionArr[(iter+offset)%MAX_ACTIONS].interruptID = action.interruptID;
+}
 
 void Queue::setAbsolute(Action action, int pos){
 	if(pos < 0 || pos > MAX_ACTIONS - 1)
@@ -58,10 +65,11 @@ void Queue::setAbsolute(Action action, int pos){
 }
 
 void Queue::beginNext(){
+	currFlag = curr->interruptID;
 	curr = next;
 	next = &actionArr[(iter+1)% MAX_PARAMS];
 
-	timeAccumulator = 0;
+	timeAccumulator = ((double)deltaT) / 1000.;
 
 	if(++iter >= MAX_ACTIONS)
 		iter = 0;
@@ -69,17 +77,23 @@ void Queue::beginNext(){
 	
 void Queue::startFrame(){ // TODO change program logic to use micros() instead of millis() for better accuracy
 	startTime = micros();
+	currFlag = -1;
 }
 
-int Queue::endFrame(){
+long Queue::endFrame(){
 	deltaT = micros() - startTime + 1;
 	return deltaT;
 }	// returns the value of deltaT so the global program can access it
 
 void Queue::executeAction(){	// really gross long switch statement
-    float frac = 0.0f;
+    float frac = 0.0;
 
-	timeAccumulator += ((double)deltaT) / 1000.;
+	if(curr->ID == ACTION_EMPTY) 
+	{
+		beginNext();
+		return;
+	}
+	timeAccumulator += (float)(deltaT / 1000);
 
 	switch((*curr).ID)
 	{
@@ -89,21 +103,30 @@ void Queue::executeAction(){	// really gross long switch statement
         break;
 
     case ACTION_DRIVE:
+		frac = timeAccumulator / curr->params[2];
+		//Serial.println(frac);
+		
+		wheelSpeed[0] = curr->params[0];
+		wheelSpeed[1] = curr->params[1];
+
+        drive(wheelSpeed[0],wheelSpeed[1]);
         if(timeAccumulator >= curr->params[2]){
             beginNext();
             return;
 		}
-
-        drive(curr->params[0],curr->params[1]);
         break;
 
     case ACTION_DRIVE_T:
+		frac = timeAccumulator / curr->params[4];
+
+		wheelSpeed[0] = lerpf(curr->params[0],curr->params[1],frac);
+		wheelSpeed[1] = lerpf(curr->params[2],curr->params[3],frac);
+
+        drive(wheelSpeed[0],wheelSpeed[1]);
         if(timeAccumulator >= curr->params[4]){
             beginNext();
             return;
 		}
-        frac = timeAccumulator / curr->params[4];
-        drive(lerpf(curr->params[0],curr->params[1],frac),lerpf(curr->params[2],curr->params[3],frac));
         break;
 
     case ACTION_REVERSE_T:
@@ -112,7 +135,11 @@ void Queue::executeAction(){	// really gross long switch statement
             return;
 		}
         frac = timeAccumulator / curr->params[2];
-        drive(lerpf(curr->params[0],-1 * curr->params[0],frac),lerpf(curr->params[1],-1 * curr->params[1],frac));
+		wheelSpeed[0] = lerpf(curr->params[0],-1 * curr->params[0],frac);
+		wheelSpeed[1] = lerpf(curr->params[1],-1 * curr->params[1],frac);
+
+        drive(wheelSpeed[0],wheelSpeed[1]);
+
         break;
 
     case ACTION_WAIT_T:
@@ -124,4 +151,15 @@ void Queue::executeAction(){	// really gross long switch statement
     default:
         break;
 	}
+}
+
+int Queue::getFlag()
+{
+	return currFlag;
+}
+
+int Queue::getWheelSpeed(bool side)
+{
+	if(side) return wheelSpeed[1];
+	return wheelSpeed[0];
 }

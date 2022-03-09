@@ -3,17 +3,16 @@
 #include "ActionID.hpp"
 
 
-//#define FRAME_TIME_INITIAL_THRESHOLD 0.2f //the robot's cycle time will often start at a value less than 1 millisecond per frame
-										  //therefore, a minimum frame time threshold must be set as
-										  //calculating deltaT is only accurate for integer values
-
 #define MAX_PARAMS 5
 #define MAX_ACTIONS 5
-
+typedef unsigned char uint8_t;
 
 struct Action{
 	int ID = ACTION_EMPTY;
 	float params[MAX_PARAMS]{};
+
+	bool completionInterrupt = false;	// TODO: interrupts call other functions based on ID after action completion
+	int interruptID = -1;
 
 	Action();
 	Action(float a, float b, float c, float d, float e, int ID);
@@ -23,9 +22,12 @@ struct Action{
 
 class Queue{
 private:
+	int wheelSpeed[2]{};
+
 	int iter = 0;
+	int currFlag = -1;
 	
-	unsigned long long int startTime = 0;
+	unsigned long long startTime = 0;
 	
 	long deltaT = 1;
 	double timeAccumulator = 0;
@@ -40,15 +42,19 @@ public:
 	Queue(Action init[], int size);
 	~Queue();
 
-	bool pushToNextEmpty(Action action);
-	void setRelative(Action action, int offset);
-	void setAbsolute(Action action, int pos);
 
-	void beginNext();
+	int getWheelSpeed(bool side);				//side false: left, side true: right
+	bool pushToNextEmpty(Action action);		//push selected action at next available slot
+	void setRelative(Action action, int offset);//set action at relative index to current
+	void setAbsolute(Action action, int pos);	//set action at absolute index
+
+	int getFlag();
+
+	void beginNext();							//end current action and start next
 	
-	void startFrame();
-	int endFrame();	// returns the value of deltaT so the global program can access it
+	void startFrame();							//get the time at beginning of frame
+	long endFrame();								//determine the time elapsed per frame
 
-	void executeAction();
+	void executeAction();						//execute/update the current action(called per frame)
 };
 
