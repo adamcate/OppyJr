@@ -1,10 +1,14 @@
-#pragma once
+#ifndef DRIVING_H
+#define DRIVING_H
 
-#include <Arduino.h>
-#include "Pins.h"
+#include "types.h"
+
+// function to control the motors based on sign & magnitude
+void drive(s16 left, s16 right);
+
+// linearly interpolate between start 
+// & end based on t's fraction of 1
+f32 lerpf(f32 start, f32 end, f32 t);
 
 
-// defined once and used everywhere, these are the pin numbers
-
-
-void drive(int spdLeft, int spdRight);              // arguments can be negative; sign indicates motor direction
+#endif
